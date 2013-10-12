@@ -1,21 +1,69 @@
-var actualFloor = 0;
-var toFloor = 0;
-var state = "OPEN";
-
-
 var elevator = {
     
     floor : 0,
-    state : "CLOSE",
+    doors : "CLOSE",
+    move : "STOP",
     commands : [],
 
     isOpen : function(){
-        return this.state == "OPEN";
+        return this.doors == "OPEN";
     },
 
+
     addCommand : function(command){
-        commands.push(command);
+       // commands.push(command);
+        if( (commands.length == 0) || (this.afterNext(command) ) ){
+            commands.push(command);    
+        }else{
+            console.log("will be the next command ", command);
+            commands.unshift(command);//should be treated before next one
+        }
+        
     },
+
+    changeState : function(state){
+            console.log("CHANGING STATE ", state);
+
+        switch(state){
+            case "STOP":
+                this.doors = "OPEN";
+                this.move = "STOP";
+                break;
+            case "UP" :
+                this.floor++;
+                this.move = "UP";
+                break;
+            case "DOWN":
+                this.floor--;
+                this.move = "DOWN";
+                break;
+            case "CLOSE":
+                this.doors = "CLOSE";
+                break;
+            default :
+            break;
+
+        }
+    },
+
+
+    afterNext : function(command){
+        
+        var next = commands[0] ;
+        console.log("compare next comma ds");
+        console.log("next ", next);
+        console.log("new command ", command);
+        console.log("state " + this.move + " " + this.doors);
+        if( (this.floor < next.floor < command.floor) && ( this.move != "DOWN") ){
+            return true ;
+        }
+        if( (this.floor > next.floor > command.floor) && ( this.move == "DOWN") ){
+            return true ;
+        }
+
+        return false;
+    },
+
 
     nextFloor : function(){
         if(commands.length == 0){
@@ -31,9 +79,21 @@ var elevator = {
         return next.floor;
     },
 
+    moveUp : function(){
+        floor++;
+        move = "UP";
+    },
+
+    moveDown : function(){
+        floor--;
+        move = "DOWN";
+    },
+
+
     reset : function(){
         floor = 0;
-        state = "CLOSE";
+        doors = "CLOSE";
+        move = "STOP";
         commands = [];        
     }
 
@@ -51,23 +111,23 @@ function nextCommand(){
         var direction = (elevator.floor > toGo) ? "DOWN" : ( (elevator.floor < toGo) ? "UP" : "");
 
 
-        if((elevator.state == "OPEN") && (direction != "") ){
-            elevator.state = "CLOSE";
+        if((elevator.doors == "OPEN") && (direction != "") ){
+            elevator.changeState("CLOSE");
             nextCommand = "CLOSE";
 
-        }else if( (elevator.state == "CLOSE") && (direction == "") ) {
-            elevator.state = "OPEN";
+        }else if( (elevator.doors == "CLOSE") && (direction == "") ) {
+            elevator.changeState("STOP");
+
+            //elevator.doors = "OPEN";
             
             nextCommand = "OPEN";            
 
         }else if( direction == "UP"){
-            //elevator.state = "CLOSE";
-            elevator.floor ++;
+            elevator.changeState("UP");
             nextCommand = "UP";
 
         }else if( direction == "DOWN"){
-            //elevator.state = "CLOSE";
-            elevator.floor --;
+            elevator.changeState("DOWN");
             nextCommand = "DOWN";
 
         }else {
@@ -75,11 +135,11 @@ function nextCommand(){
         }
 
 
-        console.log("elevator state " + elevator.state);
+        console.log("elevator doors " + elevator.doors);
         console.log("elevator floor " + elevator.floor);
-        console.log("toFloor " + toFloor);
+        console.log("toFloor " + toGo);
 
-        
+        console.log("Next command will be " + nextCommand);
         return nextCommand;
 }
 
@@ -97,7 +157,6 @@ function call(toFloorCall, to){
 
     console.log("CALL : ", command);    
     elevator.addCommand(command);
-    toFloor = toFloorCall;
     return "";
 }
 
@@ -113,8 +172,6 @@ function go(toGo){
     }
     elevator.addCommand(command);
     console.log("GO : ", command);    
-
-    toFloor = toGo;
     return "";
 }
 
