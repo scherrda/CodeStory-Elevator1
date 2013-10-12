@@ -22,6 +22,9 @@ function nextCommand(){
 }
 
 function reset(){
+    actualFloor = 0;
+    toFloor = 0;
+    isOpen = false;    
     return "";
 }
 
