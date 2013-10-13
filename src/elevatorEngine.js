@@ -4,6 +4,7 @@ var elevator = {
     doors : "CLOSE",
     move : "STOP",
     commands : [],
+    allFloors :[6],
 
     isOpen : function(){
         return this.doors == "OPEN";
@@ -11,15 +12,56 @@ var elevator = {
 
 
     addCommand : function(command){
-       // commands.push(command);
-        if( (commands.length == 0) || (this.afterNext(command) ) ){
+        console.log("ADD COMMAND", command);
+
+       //commands.push(command);
+       debugger;
+
+       if(commands.length == 0) {
+            commands.push(command);
+        } else {
+            var insertAt = this.locationOf(command);
+            console.log("insert At", insertAt);
+            commands.splice( insertAt, 0, command);
+        }
+
+        console.log("inserted in COMMANDS", commands);
+       
+
+
+/*        if( (commands.length == 0) || (this.afterNext(command) ) ){
             commands.push(command);    
         }else{
             console.log("will be the next command ", command);
-            commands.unshift(command);//should be treated before next one
+            commands.unshift(command);//should be treated before next one   
         }
-        
+*/        
     },
+
+locationOf : function (command, start, end) {
+    start = start || 0;
+    end = end || commands.length;
+    debugger;
+    var pivot = parseInt(start + (end - start) / 2);
+
+    if(end-start <= 1){
+        return commands[pivot].floor > command.floor ? pivot : pivot + 1 ;
+    }
+    if(commands[pivot].floor == command.floor){
+        do{
+            pivot ++ 
+        }while( commands[pivot] && (commands[pivot].floor == command.floor));
+        
+        return pivot;  
+    }
+
+
+    if(commands[pivot].floor < command.floor) {
+        return this.locationOf(command, pivot, end);
+    } else{
+        return this.locationOf(command, start, pivot);
+    }
+},    
 
     changeState : function(state){
             console.log("CHANGING STATE ", state);
@@ -37,7 +79,7 @@ var elevator = {
                 this.floor--;
                 this.move = "DOWN";
                 break;
-            case "CLOSE":
+            case "PREPARING":
                 this.doors = "CLOSE";
                 break;
             default :
@@ -67,7 +109,6 @@ var elevator = {
 
     nextFloor : function(){
         if(commands.length == 0){
-            console.log("no command");
             return ;
         }
         var next = commands[0];
@@ -75,7 +116,7 @@ var elevator = {
             commands = commands.slice(1); //la commande a été traitée
             next = commands[0];
         }
-        console.log("command ", next);
+        console.log("next fllor ", next.floor);
         return next.floor;
     },
 
@@ -99,48 +140,45 @@ var elevator = {
 
 }
 
-function nextCommand(){
-        var nextCommand = "NOTHING";
+function nextStep(){
+        var nextStep = "NOTHING";
 
-        console.log("current State ", elevator);
+        console.log("NEXT Step - actual State : ", elevator.doors + " " + elevator.move);
 
         var toGo = elevator.nextFloor();
         if(!toGo){
+            console.log("Next Step is " + "NOTHING");            
             return "NOTHING";   
         }
         var direction = (elevator.floor > toGo) ? "DOWN" : ( (elevator.floor < toGo) ? "UP" : "");
 
 
         if((elevator.doors == "OPEN") && (direction != "") ){
-            elevator.changeState("CLOSE");
-            nextCommand = "CLOSE";
+            elevator.changeState("PREPARING");
+            nextStep = "CLOSE";
 
         }else if( (elevator.doors == "CLOSE") && (direction == "") ) {
             elevator.changeState("STOP");
 
             //elevator.doors = "OPEN";
             
-            nextCommand = "OPEN";            
+            nextStep = "OPEN";            
 
         }else if( direction == "UP"){
             elevator.changeState("UP");
-            nextCommand = "UP";
+            nextStep = "UP";
 
         }else if( direction == "DOWN"){
             elevator.changeState("DOWN");
-            nextCommand = "DOWN";
+            nextStep = "DOWN";
 
         }else {
             return "NOTHING";
         }
 
-
-        console.log("elevator doors " + elevator.doors);
-        console.log("elevator floor " + elevator.floor);
-        console.log("toFloor " + toGo);
-
-        console.log("Next command will be " + nextCommand);
-        return nextCommand;
+        console.log("NEXT Step - new State : ", elevator.doors + " " + elevator.move);
+        console.log("Next Step " + nextStep);
+        return nextStep;
 }
 
 function reset(){
@@ -184,7 +222,7 @@ function userHasExited(){
     console.log("userHasExited");
     return "";
 }
-exports.nextCommand = nextCommand;
+exports.nextCommand = nextStep;
 exports.reset = reset;
 exports.call = call;
 exports.go = go;
