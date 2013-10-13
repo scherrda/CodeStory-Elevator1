@@ -12,12 +12,11 @@ if (typeof (console) == 'undefined' || console == null) {
 var elevator = {
     
     floor : 0,
-    doors : "CLOSE",
-    move : "STOP",
+    state : "CLOSE",
     commands : [],
 
     isOpen : function(){
-        return this.doors == "OPEN";
+        return this.state == "OPEN";
     },
 
 
@@ -62,19 +61,18 @@ var elevator = {
     changeState : function(state){
         switch(state){
             case "OPEN":
-                this.doors = "OPEN";
-                this.move = "STOP";
+                this.state = "OPEN";
                 break;
             case "UP" :
                 this.floor++;
-                this.move = "UP";
+                this.state = "UP";
                 break ;
             case "DOWN":
                 this.floor--;
-                this.move = "DOWN";
+                this.state = "DOWN";
                 break;
             case "CLOSE":
-                this.doors = "CLOSE";
+                this.state = "CLOSE";
                 break;
             default :
                 break;
@@ -94,21 +92,10 @@ var elevator = {
         return next.floor;
     },
 
-    moveUp : function(){
-        floor++;
-        move = "UP";
-    },
-
-    moveDown : function(){
-        floor--;
-        move = "DOWN";
-    },
-
 
     reset : function(){
         floor = 0;
-        doors = "CLOSE";
-        move = "STOP";
+        state = "CLOSE";
         this.commands = [];        
     }
 }
@@ -116,7 +103,7 @@ var elevator = {
 function nextStep(){
         var nextStep = "NOTHING";
 
-        console.log("Actual State : ", elevator.floor + "e " + elevator.doors + " " + elevator.move);
+        console.log("Actual State : ", elevator.floor + "e " + elevator.state);
 
         var toGo = elevator.nextFloor();
         var move = (elevator.floor > toGo) ? "DOWN" : ( (elevator.floor < toGo) ? "UP" : "STOP");
@@ -134,7 +121,7 @@ function nextStep(){
         }
 
         elevator.changeState(nextStep);
-        console.log("New State : ", elevator.floor + "e " + elevator.doors + " " + elevator.move);
+        console.log("New State : ", elevator.floor + "e " + elevator.state );
         return nextStep;
 }
 
