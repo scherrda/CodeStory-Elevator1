@@ -42,11 +42,13 @@ describe("Code Story Elevator", function() {
 	});
 
 	
-	it("3 calls to the elevator up", function() {
+	it("3 calls to the elevator up and down", function() {
 		reset();
 		expect(call(5, "UP")).toEqual("");
-		expect(call(3, "down")).toEqual("");
+		expect(call(3, "DOWN")).toEqual("");
 		expect(call(2, "UP")).toEqual("");
+		
+		expect(elevator.commands.length).toEqual(3);
 		expect(elevator.commands[0].floor).toEqual(2);
 		expect(elevator.commands[2].floor).toEqual(5);
 		expect(elevator.nextFloor()).toEqual(2);
@@ -63,6 +65,18 @@ describe("Code Story Elevator", function() {
 		reset();
 		expect(go(0)).toEqual("");
 		expect(elevator.commands.length).toEqual(0);
+	});
+	
+	//review this test
+	it("calling from 3rd floor and going to the first floor", function() {
+		reset();
+		expect(elevator.floor).toEqual(0);
+		expect(call(3, "DOWN")).toEqual("");
+		expect(nextStep()).toEqual("UP");
+		expect(go(1)).toEqual("");
+		expect(elevator.commands.length).toEqual(1);
+		expect(elevator.commands[0].floor).toEqual(3);
+		expect(elevator.commands[0].direction).toEqual("DOWN");
 	});
 	
 	

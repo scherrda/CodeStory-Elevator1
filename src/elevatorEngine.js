@@ -127,7 +127,7 @@ locationOf : function (command, start, end) {
             this.commands = this.commands.slice(1); //la commande a été traitée
             next = this.commands[0];
         }
-        console.log("next fllor ", next.floor);
+        console.log("next floor ", next.floor);
         return next.floor;
     },
 
