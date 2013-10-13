@@ -1,3 +1,14 @@
+if (typeof (console) == 'undefined' || console == null) {
+	console = {
+		log : function() {
+		},
+		warn : function() {
+		},
+		error : function() {
+		}
+	}
+}
+
 var elevator = {
     
     floor : 0,
@@ -17,15 +28,15 @@ var elevator = {
        //commands.push(command);
        debugger;
 
-       if(commands.length == 0) {
-            commands.push(command);
+       if(this.commands.length == 0) {
+            this.commands.push(command);
         } else {
             var insertAt = this.locationOf(command);
             console.log("insert At", insertAt);
-            commands.splice( insertAt, 0, command);
+            this.commands.splice( insertAt, 0, command);
         }
 
-        console.log("inserted in COMMANDS", commands);
+        console.log("inserted in COMMANDS", this.commands);
        
 
 
@@ -40,23 +51,23 @@ var elevator = {
 
 locationOf : function (command, start, end) {
     start = start || 0;
-    end = end || commands.length;
+    end = end || this.commands.length;
     debugger;
     var pivot = parseInt(start + (end - start) / 2);
 
     if(end-start <= 1){
-        return commands[pivot].floor > command.floor ? pivot : pivot + 1 ;
+        return this.commands[pivot].floor > command.floor ? pivot : pivot + 1 ;
     }
-    if(commands[pivot].floor == command.floor){
+    if(this.commands[pivot].floor == command.floor){
         do{
             pivot ++ 
-        }while( commands[pivot] && (commands[pivot].floor == command.floor));
+        }while( this.commands[pivot] && (this.commands[pivot].floor == command.floor));
         
         return pivot;  
     }
 
 
-    if(commands[pivot].floor < command.floor) {
+    if(this.commands[pivot].floor < command.floor) {
         return this.locationOf(command, pivot, end);
     } else{
         return this.locationOf(command, start, pivot);
@@ -91,7 +102,7 @@ locationOf : function (command, start, end) {
 
     afterNext : function(command){
         
-        var next = commands[0] ;
+        var next = this.commands[0] ;
         console.log("compare next comma ds");
         console.log("next ", next);
         console.log("new command ", command);
@@ -108,13 +119,13 @@ locationOf : function (command, start, end) {
 
 
     nextFloor : function(){
-        if(commands.length == 0){
+        if(this.commands.length == 0){
             return ;
         }
-        var next = commands[0];
+        var next = this.commands[0];
         if( (next.floor == this.floor) && this.isOpen()) {
-            commands = commands.slice(1); //la commande a été traitée
-            next = commands[0];
+            this.commands = this.commands.slice(1); //la commande a été traitée
+            next = this.commands[0];
         }
         console.log("next fllor ", next.floor);
         return next.floor;
@@ -135,7 +146,7 @@ locationOf : function (command, start, end) {
         floor = 0;
         doors = "CLOSE";
         move = "STOP";
-        commands = [];        
+        this.commands = [];        
     }
 
 }
