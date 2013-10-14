@@ -14,6 +14,8 @@ var elevator = {
     floor : 0,
     state : "CLOSE",
     commands : [],
+    curIndex : 0,
+    move : "STOP",
 
     isOpen : function(){
         return this.state == "OPEN";
@@ -27,6 +29,10 @@ var elevator = {
         } else {
             insertAt = this.locationOf(command);
             this.commands.splice( insertAt, 0, command);
+            if((insertAt <= this.curIndex) && (command.floor < this.floor)){
+                this.curIndex ++;
+            }
+
         }
         console.log("ADD COMMAND", command);
         console.log("inserted at " + insertAt + " in ", this.commands);
@@ -81,22 +87,58 @@ var elevator = {
 
 
     nextFloor : function(){
+    console.log("NEXT FLOOR commands before ", this.commands);
         if(this.commands.length == 0){
             return ;
         }
-        var next = this.commands[0];
+
+       console.log("curIndex " + this.curIndex);
+        var next = this.commands[this.curIndex];
+
         if( (next.floor == this.floor) && this.isOpen()) {
-            this.commands = this.commands.slice(1); //la commande a été traitée
-            next = this.commands[0];
+            console.log("command finished");
+            this.commands.splice(this.curIndex, 1); //la commande a été traitée
+
+            if(this.commands.length == 0){
+                this.move = "STOP";
+                console.log("no more command");
+                return ; //no more commands;
+            }
+
+            if(this.curIndex > this.commands.length - 1){
+                this.curIndex = this.commands.length - 1;
+                this.move = "DOWN";
+                console.log("changing direction to DOWN " + this.curIndex);
+            }else if(this.curIndex == 0 && this.move == "DOWN"){
+                this.move = "UP";
+            } else if(this.move == "DOWN"){
+                this.curIndex --;
+                console.log("updating curIndex ", this.curIndex);
+            }
+
+
+
+            next = this.commands[this.curIndex];
         }
+
+        if(this.move == "STOP"){
+            if(next.floor >= this. floor){
+                this.move = "UP";
+            }else{
+                this.move = "DOWN";
+            }
+        }
+        console.log("NEXT FLOOR commands After ", this.commands);
         return next.floor;
     },
 
 
     reset : function(){
-        floor = 0;
-        state = "CLOSE";
-        this.commands = [];        
+        this.floor = 0;
+        this.state = "CLOSE";
+        this.commands = [];
+        this.curIndex = 0 ;
+        this.move = "STOP";
     }
 }
 
@@ -109,12 +151,12 @@ function nextStep(){
         var move = (elevator.floor > toGo) ? "DOWN" : ( (elevator.floor < toGo) ? "UP" : "STOP");
 
         if(elevator.isOpen()){
-            if((move == "STOP")){
+            if( move == "STOP"){
                 nextStep = "NOTHING";
             }else{
                 nextStep = "CLOSE";
             }
-        }else if(move == "STOP"){
+        }else if( move == "STOP"){
                 nextStep = "OPEN";
         }else{
                 nextStep = move;
