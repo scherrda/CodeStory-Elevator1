@@ -15,16 +15,23 @@ var elevator = {
     state : "CLOSE",
     commands : [],
     curIndex : 0,
-    move : "STOP",
+    moving : "STOP",
 
     isOpen : function(){
         return this.state == "OPEN";
     },
 
+    noCommand : function(){
+        return this.commands.length == 0;
+    },
+    hasCommand : function(){
+        return this.commands.length > 0;
+    },
+
 
     addCommand : function(command){
        var insertAt = 0;
-       if(this.commands.length == 0) {
+       if(this.noCommand()) {
             this.commands.push(command);
         } else {
             insertAt = this.locationOf(command);
@@ -42,7 +49,6 @@ var elevator = {
     locationOf : function (command, start, end) {
         start = start || 0;
         end = end || this.commands.length;
-        debugger;
         var pivot = parseInt(start + (end - start) / 2);
 
         if(end-start <= 1){
@@ -62,20 +68,51 @@ var elevator = {
         } else{
             return this.locationOf(command, start, pivot);
         }
-    },  
+    }, 
 
-    changeState : function(state){
+   nextState : function(){
+        var nextState ;
+
+		var command = this.nextCommand();
+        var toGo = command ? command.floor : null ;
+        var move = (this.floor > toGo) ? "DOWN" : ( (this.floor < toGo) ? "UP" : "STOP" );
+
+        switch(this.state){
+            case "CLOSE" :
+                nextState = ((null == toGo) ? "CLOSE" : (move == "STOP" ? "OPEN": move ) ) ;
+                break;
+            case "OPEN" :
+                nextState = ((toGo > -1) && (toGo == this.floor) ? "OPEN": "CLOSE") ;
+                break;
+            case "UP" :
+                nextState = ((move == "STOP") && toGo > -1) ? "OPEN": move ;
+                break;
+            case "DOWN" :
+                nextState = ((move == "STOP") && toGo > -1 ) ? "OPEN": move ;
+                break;
+            default :
+                nextState = "CLOSE";
+                break;
+        }
+        return nextState;
+    },	
+
+    changeState : function(){
+        var state = this.nextState();
         switch(state){
             case "OPEN":
                 this.state = "OPEN";
+                this.removeFinishedCommand();
                 break;
             case "UP" :
                 this.floor++;
                 this.state = "UP";
+				this.moving = "UP";
                 break ;
             case "DOWN":
                 this.floor--;
                 this.state = "DOWN";
+				this.moving = "DOWN";
                 break;
             case "CLOSE":
                 this.state = "CLOSE";
@@ -83,13 +120,49 @@ var elevator = {
             default :
                 break;
         }
+        return this.state;
     },
+	
+	isFinished : function(command){
+		return (command.floor == this.floor) && this.isOpen();
+	},
+	
+	newIndex : function(){
+		if(this.curIndex > this.commands.length - 1){
+			this.curIndex = this.commands.length - 1;
+			this.moving = "DOWN";
+		}else if(this.curIndex == 0){
+		    this.moving = "UP";
+		}else if(this.moving == "DOWN"){
+			this.curIndex --;
+			console.log("updating curIndex ", this.curIndex);
+		}	
+	},
+	
+	nextCommand : function(){
+	    if(!this.hasCommand()){
+	        return null;
+	    }
+		var next = this.commands[this.curIndex];
+		if(this.isFinished(next)){
+		    this.removeFinishedCommand();
+		    next = this.nextCommand();
+		}
+		return next;		
+	},
 
+	removeFinishedCommand : function(){
+        this.commands.splice(this.curIndex, 1); //la commande a été traitée
+        if(this.hasCommand()){
+            this.newIndex();
+        }
+	},
 
+/*
     nextFloor : function(){
     console.log("NEXT FLOOR commands before ", this.commands);
-        if(this.commands.length == 0){
-            return ;
+        if(this.noCommand()){
+            return null;
         }
 
        console.log("curIndex " + this.curIndex);
@@ -100,18 +173,18 @@ var elevator = {
             this.commands.splice(this.curIndex, 1); //la commande a été traitée
 
             if(this.commands.length == 0){
-                this.move = "STOP";
+                this.moving = "STOP";
                 console.log("no more command");
                 return ; //no more commands;
             }
 
             if(this.curIndex > this.commands.length - 1){
                 this.curIndex = this.commands.length - 1;
-                this.move = "DOWN";
+                this.moving = "DOWN";
                 console.log("changing direction to DOWN " + this.curIndex);
-            }else if(this.curIndex == 0 && this.move == "DOWN"){
-                this.move = "UP";
-            } else if(this.move == "DOWN"){
+            }else if(this.curIndex == 0 && this.moving == "DOWN"){
+                this.moving = "UP";
+            } else if(this.moving == "DOWN"){
                 this.curIndex --;
                 console.log("updating curIndex ", this.curIndex);
             }
@@ -121,16 +194,17 @@ var elevator = {
             next = this.commands[this.curIndex];
         }
 
-        if(this.move == "STOP"){
+        if(this.moving == "STOP"){
             if(next.floor >= this. floor){
-                this.move = "UP";
+                this.moving = "UP";
             }else{
-                this.move = "DOWN";
+                this.moving = "DOWN";
             }
         }
         console.log("NEXT FLOOR commands After ", this.commands);
         return next.floor;
     },
+*/
 
 
     reset : function(){
@@ -138,33 +212,19 @@ var elevator = {
         this.state = "CLOSE";
         this.commands = [];
         this.curIndex = 0 ;
-        this.move = "STOP";
+        this.moving = "STOP";
     }
 }
 
 function nextStep(){
-        var nextStep = "NOTHING";
-
         console.log("Actual State : ", elevator.floor + "e " + elevator.state);
 
-        var toGo = elevator.nextFloor();
-        var move = (elevator.floor > toGo) ? "DOWN" : ( (elevator.floor < toGo) ? "UP" : "STOP");
+        var actualState = elevator.state;
+        var nextState = elevator.changeState();
 
-        if(elevator.isOpen()){
-            if( move == "STOP"){
-                nextStep = "NOTHING";
-            }else{
-                nextStep = "CLOSE";
-            }
-        }else if( move == "STOP"){
-                nextStep = "OPEN";
-        }else{
-                nextStep = move;
-        }
-
-        elevator.changeState(nextStep);
         console.log("New State : ", elevator.floor + "e " + elevator.state );
-        return nextStep;
+        return ((nextState == actualState) && ( (nextState == "CLOSE") || (nextState == "OPEN")))
+                ? "NOTHING" : nextState ;
 }
 
 function reset(){
