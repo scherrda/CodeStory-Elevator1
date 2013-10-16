@@ -14,6 +14,8 @@ var elevator = {
     floor : 0,
     state : "CLOSE",
     commands : [],
+    upCommands : [],
+    downCommands : [],
     curIndex : 0,
     moving : "STOP",
 
@@ -22,27 +24,38 @@ var elevator = {
     },
 
     noCommand : function(){
-        return this.commands.length == 0;
+        return (this.upCommands.length == 0) && (this.downCommands.length == 0) ;
+        //return this.commands.length == 0;
     },
     hasCommand : function(){
         return this.commands.length > 0;
     },
 
+    getArrayCmds : function(){
+        return this.moving == "UP"? this.upCommands : this.downCommands;
+    }
+
 
     addCommand : function(command){
        var insertAt = 0;
+       var commands = (command.direction == "UP"? this.upCommands : this.downCommands) ;
+       commands.push(command);
+
+/*
+
        if(this.noCommand()) {
             this.commands.push(command);
         } else {
+            commands.splice( insertAt, 0, command);
             insertAt = this.locationOf(command);
             this.commands.splice( insertAt, 0, command);
             if((insertAt <= this.curIndex) && (command.floor < this.floor)){
                 this.curIndex ++;
             }
-
         }
         console.log("ADD COMMAND", command);
         console.log("inserted at " + insertAt + " in ", this.commands);
+*/
     },
 
 
@@ -143,19 +156,34 @@ var elevator = {
 	    if(!this.hasCommand()){
 	        return null;
 	    }
+	    var commands = this.getArrayCmds();
+	    var next = commands[0];
+		if(this.isFinished(next)){
+		    this.removeFinishedCommand();
+		    next = this.nextCommand();
+		}
+		return next;
+/*
+
+
 		var next = this.commands[this.curIndex];
 		if(this.isFinished(next)){
 		    this.removeFinishedCommand();
 		    next = this.nextCommand();
 		}
 		return next;		
+*/
 	},
 
 	removeFinishedCommand : function(){
-        this.commands.splice(this.curIndex, 1); //la commande a été traitée
+		var commands = this.getArrayCmds();
+		commands.shift();
+       // this.commands.splice(this.curIndex, 1); //la commande a été traitée
+/*
         if(this.hasCommand()){
             this.newIndex();
         }
+*/
 	},
 
 /*
